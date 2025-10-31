@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNA Chinese Basic Level Quiz</title>
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #74ABE2, #5563DE);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 20px;
+        color: #333;
+    }
+    .card {
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        max-width: 650px;
+        width: 100%;
+        padding: 30px;
+        animation: fadeIn 0.8s ease;
+        position: relative;
+    }
+    @keyframes fadeIn {
+        from {opacity: 0; transform: translateY(10px);}
+        to {opacity: 1; transform: translateY(0);}
+    }
+    h1 { text-align: center; color: #333; margin-bottom: 20px; }
+    p { margin: 10px 0; }
+    input[type="text"], input[type="number"], input[type="password"] {
+        width: 100%;
+        padding: 12px;
+        box-sizing: border-box;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        margin-top: 10px;
+        font-size: 1em;
+    }
+    button {
+        background: #5563DE;
+        color: #fff;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 1em;
+        cursor: pointer;
+        transition: 0.3s;
+        width: 100%;
+        margin-top: 15px;
+    }
+    button:hover { background: #3f4fc1; }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+    .hidden { display: none; }
+    label {
+        display: block;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin: 8px 0;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    label:hover { background: #f3f6ff; }
+    input[type="radio"], input[type="checkbox"] { margin-right: 10px; }
+    .progress { width: 100%; background: #e5e5e5; border-radius: 10px; overflow: hidden; margin: 20px 0; }
+    .progress-bar { height: 10px; background: #5563DE; width: 0%; transition: width 0.4s ease; }
+    .timer { text-align: right; color: #e74c3c; font-weight: bold; margin-bottom: 10px;}
+    .confirmation-box { margin-top: 20px; padding: 10px; text-align: center; }
+
+    /* Result styles */
+    .correct { background-color: #d4edda; border-color: #c3e6cb; }
+    .incorrect { background-color: #f8d7da; border-color: #f5c6cb; }
+    #resultBox { text-align: center; }
+    #scoreText { font-size: 1.5em; font-weight: bold; }
+
+    /* Admin Panel styles */
+    .admin-icon {
+        position: fixed; bottom: 20px; right: 20px; background: #333; color: white;
+        border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center;
+        justify-content: center; font-size: 1.8em; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1001;
+    }
+    .admin-panel {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+        z-index: 1000; display: none;
+    }
+    .admin-content {
+        background: white; border-radius: 12px; box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        padding: 25px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;
+        position: relative;
+    }
+    .admin-content h3, .admin-content h4 { margin-top: 0; }
+    .close-btn { position: absolute; top: 10px; right: 15px; font-size: 1.5em; cursor: pointer; color: #aaa; }
+    .list { list-style: none; padding: 0; }
+    .list li {
+        background: #f9f9f9; padding: 10px; border-radius: 6px;
+        margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+    }
+    .list-item-text { flex-grow: 1; margin-right: 10px; font-size: 0.9em;}
+    .list-item-actions button { width: auto; padding: 5px 10px; font-size: 0.8em; margin: 5px 0 5px 5px; }
+    .btn-edit { background: #ffc107; }
+    .btn-delete { background: #dc3545; }
+    .btn-logout { background: #6c757d; }
+    .btn-reset { background: #17a2b8; }
+</style>
+</head>
+<body>
+
+<div class="card">
+    <h1>SNA Chinese Basic Level Quiz</h1>
+
+    <div id="nameSection">
+        <p>Enter your name to begin:</p>
+        <input type="text" id="studentName" placeholder="Your name">
+        <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quizContainer" class="hidden">
+        <div id="timerBox" class="timer">⏳ Time left: <span id="timeLeft"></span></div>
+        <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+        <form id="quizForm"></form>
+    </div>
+
+    <div id="resultBox" class="hidden">
+        <h2>🎯 Your Result</h2>
+        <p id="summary"></p>
+        <h3 id="scoreText"></h3>
+        <button onclick="location.reload()">Return Home</button>
+    </div>
+</div>
+
+<div class="admin-icon" onclick="toggleAdminPanel()">⚙️</div>
+
+<div class="admin-panel" id="adminPanel">
+    <div class="admin-content">
+        <span class="close-btn" onclick="toggleAdminPanel()">&times;</span>
+        <h3>Admin Panel</h3>
+        <div id="adminLogin">
+            <input type="password" id="adminPassword" placeholder="Enter password">
+            <button onclick="checkAdmin()">Login</button>
+        </div>
+        <div id="adminControls" class="hidden">
+            <h4>Add / Update Question</h4>
+            <input type="hidden" id="editingIndex" value="-1">
+            <input type="text" id="newQuestion" placeholder="Question">
+            <input type="text" id="optA" placeholder="Option A">
+            <input type="text" id="optB" placeholder="Option B">
+            <input type="text" id="optC" placeholder="Option C">
+            <input type="text" id="optD" placeholder="Option D">
+            <input type="text" id="correctAns" placeholder="Correct answer text">
+            <button id="addOrUpdateBtn" onclick="addOrUpdateQuestion()">Add Question</button>
+            <hr>
+            <h4>Manage Questions</h4>
+            <ul id="questionManageList" class="list"></ul>
+            <hr>
+            <h4>Submitted Users</h4>
+            <ul id="submittedUsersList" class="list"></ul>
+            <hr>
+            <label>Set Exam Time (minutes):</label>
+            <input type="number" id="examTime" placeholder="e.g. 5">
+            <button onclick="saveExamTime()">Save Time</button>
+            <hr>
+            <button class="btn-delete" onclick="clearAll()">🗑 Clear All Questions</button>
+            <button class="btn-logout" onclick="adminLogout()">Logout</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- CONFIGURATION ---
+const BOT_TOKEN = "7233414815:AAHhlUfOAiD8SLJNRNWlY4SJ_PV3wZf-GhY";
+const CHAT_ID = "913876234";
+const ADMIN_PASS = "Oppa123";
+
+// --- LOCALSTORAGE KEYS ---
+const QUESTIONS_KEY = 'quizQuestions';
+const SUBMISSIONS_KEY = 'quizSubmissions';
+const EXAM_TIME_KEY = 'examTime';
+
+// --- GLOBAL VARIABLES ---
+let timerInterval;
+let timeRemaining = 0;
+let questions = [];
+let studentName = '';
+
+// --- INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', () => {
+    questions = loadQuestions();
+});
+
+// --- DATA HANDLING ---
+function getSubmissions() {
+    return JSON.parse(localStorage.getItem(SUBMISSIONS_KEY) || '{}');
+}
+
+function saveSubmissions(submissions) {
+    localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(submissions));
+}
+
+function loadQuestions() {
+    const stored = localStorage.getItem(QUESTIONS_KEY);
+    if (stored && JSON.parse(stored).length > 0) {
+        return JSON.parse(stored);
+    }
+    // Default questions if localStorage is empty
+    return [
+        {q:"What is '你好'?", opts:["Hello","Goodbye","Thanks", "Sorry"], ans:"Hello"},
+        {q:"What is '谢谢'?", opts:["Sorry","Thank you","Good morning", "Excuse me"], ans:"Thank you"},
+        {q:"What is '再见'?", opts:["See you again","Hello","Thank you", "You're welcome"], ans:"See you again"}
+    ];
+}
+
+function saveQuestions() {
+    localStorage.setItem(QUESTIONS_KEY, JSON.stringify(questions));
+}
+
+// --- UTILITY FUNCTIONS ---
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+// --- QUIZ LOGIC ---
+function startQuiz() {
+    const nameInput = document.getElementById("studentName").value.trim();
+    if (!nameInput) {
+        alert("Please enter your name.");
+        return;
+    }
+
+    const submissions = getSubmissions();
+    if (submissions[nameInput]) {
+        alert("This name has already been used to submit the quiz. Please contact the administrator to reset your attempt.");
+        return;
+    }
+    
+    studentName = nameInput;
+    document.getElementById("nameSection").classList.add("hidden");
+    document.getElementById("quizContainer").classList.remove("hidden");
+
+    shuffleArray(questions);
+    const quizForm = document.getElementById("quizForm");
+    quizForm.innerHTML = '';
+
+    questions.forEach((q, i) => {
+        const shuffledOpts = [...q.opts];
+        shuffleArray(shuffledOpts);
+        quizForm.innerHTML += `
+            <div class="question-block" id="q-block-${i}">
+                <p>${i + 1}. ${q.q}</p>
+                ${shuffledOpts.map(o => `<label><input type='radio' name='q${i}' value='${o}'> ${o}</label>`).join('')}
+            </div>
+        `;
+    });
+    
+    quizForm.innerHTML += `
+        <div class="confirmation-box">
+            <label><input type="checkbox" id="confirmSubmit"> I have reviewed my answers and am ready to submit.</label>
+        </div>
+        <button type="button" id="submitBtn" onclick="submitQuiz()" disabled>Submit</button>
+    `;
+
+    document.querySelectorAll('input[type="radio"]').forEach(r => r.addEventListener('change', updateProgress));
+    document.getElementById('confirmSubmit').addEventListener('change', (e) => {
+        document.getElementById('submitBtn').disabled = !e.target.checked;
+    });
+    
+    const examTime = localStorage.getItem(EXAM_TIME_KEY) || 5;
+    startTimer(parseInt(examTime) * 60);
+}
+
+function submitQuiz() {
+    clearInterval(timerInterval);
+    let correctCount = 0;
+    
+    questions.forEach((q, i) => {
+        const chosenRadio = document.querySelector(`input[name='q${i}']:checked`);
+        document.querySelectorAll(`#q-block-${i} label`).forEach(label => {
+            const radio = label.querySelector('input');
+            radio.disabled = true;
+            if (radio.value === q.ans) label.classList.add('correct');
+        });
+
+        if (chosenRadio) {
+            if (chosenRadio.value === q.ans) {
+                correctCount++;
+            } else {
+                chosenRadio.parentElement.classList.add('incorrect');
+            }
+        }
+    });
+
+    const score = Math.round((correctCount / questions.length) * 100);
+    const submissions = getSubmissions();
+    submissions[studentName] = {
+        score: score,
+        date: new Date().toLocaleString()
+    };
+    saveSubmissions(submissions);
+
+    const wrongCount = questions.length - correctCount;
+    let resultText = score === 100 ? "🌟 Excellent!" : score >= 80 ? "👍 Great Job!" : score >= 50 ? "😐 Good Effort" : "❌ Keep Practicing";
+
+    document.getElementById("submitBtn").classList.add("hidden");
+    document.querySelector(".confirmation-box").classList.add("hidden");
+    document.getElementById("timerBox").classList.add("hidden");
+    document.getElementById("resultBox").classList.remove("hidden");
+    document.getElementById("summary").innerHTML = `Name: <b>${studentName}</b><br>Correct: ${correctCount} | Wrong: ${wrongCount}`;
+    document.getElementById("scoreText").textContent = `${score}/100 - ${resultText}`;
+
+    sendToTelegram(studentName, correctCount, wrongCount, score, resultText);
+}
+
+// --- TIMER & PROGRESS ---
+function startTimer(seconds){document.getElementById("timerBox").classList.remove("hidden");timeRemaining=seconds;updateTimer();timerInterval=setInterval(()=>{timeRemaining--;updateTimer();if(timeRemaining<=0){clearInterval(timerInterval);alert("Time's up!");submitQuiz();}},1000);}
+function updateTimer(){const min=Math.floor(timeRemaining/60),sec=timeRemaining%60;document.getElementById("timeLeft").textContent=`${min}:${sec<10?'0':''}${sec}`;}
+function updateProgress(){const total=questions.length;const answered=Array.from(new Set(Array.from(document.querySelectorAll('input[type="radio"]:checked')).map(r=>r.name))).length;document.getElementById("progressBar").style.width=(answered/total*100)+'%';}
+
+// --- TELEGRAM INTEGRATION ---
+function sendToTelegram(name,correct,wrong,score,resultText){const msg=`📝 Quiz Result:\n\n🧑‍🎓 Name: ${name}\n✅ Correct: ${correct}\n❌ Wrong: ${wrong}\n💯 Score: ${score}/100\n🏆 Result: ${resultText}`;fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:CHAT_ID,text:msg})}).catch(error=>console.error('Telegram API Error:',error));}
+
+// --- ADMIN PANEL LOGIC ---
+function toggleAdminPanel(){const panel=document.getElementById("adminPanel");panel.style.display=(panel.style.display==='flex')?'none':'flex';}
+function checkAdmin(){const pass=document.getElementById("adminPassword").value;if(pass===ADMIN_PASS){document.getElementById("adminLogin").classList.add("hidden");document.getElementById("adminControls").classList.remove("hidden");document.getElementById("adminPassword").value='';renderAdminLists();}else{alert("Incorrect password!");}}
+function adminLogout(){document.getElementById("adminLogin").classList.remove("hidden");document.getElementById("adminControls").classList.add("hidden");}
+
+function renderAdminLists() {
+    renderAdminQuestions();
+    renderSubmittedUsers();
+}
+
+function renderSubmittedUsers() {
+    const list = document.getElementById("submittedUsersList");
+    const submissions = getSubmissions();
+    list.innerHTML = '';
+    if (Object.keys(submissions).length === 0) {
+        list.innerHTML = '<li>No submissions yet.</li>';
+        return;
+    }
+    for (const name in submissions) {
+        const submission = submissions[name];
+        list.innerHTML += `
+            <li>
+                <div class="list-item-text">
+                    <strong>${name}</strong><br>
+                    Score: ${submission.score}/100 | Submitted: ${submission.date}
+                </div>
+                <div class="list-item-actions">
+                    <button class="btn-reset" onclick="resetUser('${name}')">Reset</button>
+                </div>
+            </li>
+        `;
+    }
+}
+
+function resetUser(name) {
+    if (confirm(`Are you sure you want to reset the submission for "${name}"? They will be able to take the quiz again.`)) {
+        const submissions = getSubmissions();
+        delete submissions[name];
+        saveSubmissions(submissions);
+        renderSubmittedUsers();
+        alert(`Submission for "${name}" has been reset.`);
+    }
+}
+
+function renderAdminQuestions() {
+    const list = document.getElementById("questionManageList");
+    list.innerHTML = '';
+    questions.forEach((q, i) => {
+        list.innerHTML += `<li><span class="list-item-text">${i + 1}. ${q.q}</span><div class="list-item-actions"><button class="btn-edit" onclick="editQuestion(${i})">Edit</button><button class="btn-delete" onclick="deleteQuestion(${i})">Delete</button></div></li>`;
+    });
+}
+
+function addOrUpdateQuestion() {
+    const q = document.getElementById("newQuestion").value.trim();
+    const opts = [
+        document.getElementById("optA").value.trim(),
+        document.getElementById("optB").value.trim(),
+        document.getElementById("optC").value.trim(),
+        document.getElementById("optD").value.trim()
+    ].filter(opt => opt !== ""); // Filter out empty options
+
+    const ans = document.getElementById("correctAns").value.trim();
+    const editingIndex = document.getElementById("editingIndex").value;
+
+    if (!q || opts.length < 2 || !ans) {
+        alert("A question requires at least two options and a correct answer.");
+        return;
+    }
+    if (!opts.includes(ans)) {
+        alert("The correct answer must match one of the options.");
+        return;
+    }
+
+    const newQuestion = { q, opts, ans };
+
+    if (editingIndex > -1) {
+        questions[editingIndex] = newQuestion;
+    } else {
+        questions.push(newQuestion);
+    }
+    
+    saveQuestions();
+    alert(editingIndex > -1 ? "Question updated!" : "Question added!");
+    resetAdminForm();
+    renderAdminQuestions();
+}
+
+function resetAdminForm() {
+    document.getElementById("newQuestion").value = "";
+    document.getElementById("optA").value = "";
+    document.getElementById("optB").value = "";
+    document.getElementById("optC").value = "";
+    document.getElementById("optD").value = "";
+    document.getElementById("correctAns").value = "";
+    document.getElementById("editingIndex").value = "-1";
+    document.getElementById("addOrUpdateBtn").textContent = "Add Question";
+}
+
+function editQuestion(index) {
+    const q = questions[index];
+    document.getElementById("newQuestion").value = q.q;
+    document.getElementById("optA").value = q.opts[0] || '';
+    document.getElementById("optB").value = q.opts[1] || '';
+    document.getElementById("optC").value = q.opts[2] || '';
+    document.getElementById("optD").value = q.opts[3] || '';
+    document.getElementById("correctAns").value = q.ans;
+    document.getElementById("editingIndex").value = index;
+    document.getElementById("addOrUpdateBtn").textContent = "Update Question";
+    document.getElementById('newQuestion').focus();
+}
+
+function deleteQuestion(index) {
+    if (confirm(`Are you sure you want to delete question ${index + 1}?`)) {
+        questions.splice(index, 1);
+        saveQuestions();
+        renderAdminQuestions();
+    }
+}
+
+function saveExamTime() {
+    const t = document.getElementById("examTime").value;
+    if (!t || t < 1) {
+        alert("Please enter a valid time in minutes.");
+        return;
+    }
+    localStorage.setItem(EXAM_TIME_KEY, t);
+    alert("Exam time saved!");
+}
+
+function clearAll() {
+    if (confirm("Are you sure you want to clear ALL questions? This cannot be undone.")) {
+        localStorage.removeItem(QUESTIONS_KEY);
+        questions = loadQuestions();
+        renderAdminQuestions();
+        alert("All questions have been cleared.");
+    }
+}
+</script>
+
+</body>
+</html>
